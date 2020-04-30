@@ -11,7 +11,7 @@ class ArbolS():
             for val in self.nodos:
                 if val.identificador == idenPadre:
                     nodo = Nodo(valor,idenHijo,[])
-                    val.hijos.append(nodo)
+                    val.hijos.insert(0,nodo)
                     self.nodos.append(nodo)
                     self.tamanio += 1
                     break

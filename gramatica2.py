@@ -2,7 +2,6 @@ import string
     
 class Gramatica2():
     
-
     def __init__(self,nombre,terminales,noTerminales,noTerminalInicial,producciones):
         self.nombre = nombre
         self.terminales = terminales
@@ -237,6 +236,7 @@ class Gramatica2():
     def eliminarProduccion(self,produccion):
         #variable para validar la existencia de la produccion
         aux = False
+        auxi = False
         
         #separacion de la produccion en lado izquierdo y derecho
         produccion = produccion.split(">")
@@ -249,6 +249,75 @@ class Gramatica2():
                 aux = True
                 break
 
+        #revisando si la produccion a borrar tiene una recursiva asociada
+        if inicial+"_P" in self.noTerminales:
+            auxi = True
+
+        #
+        if auxi:
+            recursiva = derecha.split(" ")
+            if inicial == recursiva[0]:
+                nuevoInicial = inicial + "_P"
+                derecha = derecha.lstrip(inicial+" ")
+                derecha += " "+ nuevoInicial
+
+                for valor in self.producciones:
+                    if valor.inicial == nuevoInicial:
+                        break
+                
+                for derecho in valor.ladoDerecho:
+                    if derecho == derecha:
+                        aux = True
+                        break
+                
+                if aux: 
+                    valor.ladoDerecho.remove(derecho)
+                    aux = False
+                    if len(valor.ladoDerecho) == 1:
+                        aux = True
+                    
+                    if aux:
+                        aux = False
+                        self.producciones.remove(valor)
+                        self.noTerminales.remove(nuevoInicial)
+                        for valor in self.producciones:
+                            if valor.inicial == inicial:
+                                print("zi x2")
+                                for it in range(len(valor.ladoDerecho)):
+                                    valor.ladoDerecho[it] = valor.ladoDerecho[it].rstrip(" "+nuevoInicial)
+                                break
+
+                        return"Se a eliminado la produccion de la gramatica"
+                    else:
+                        return"Se a eliminado la produccion de la gramatica"
+            else:
+                aux = False
+                derecha += " "+inicial+"_P"
+                for valor in self.producciones:
+                    if valor.inicial == inicial:
+                        aux = True
+                        break
+                
+                if aux:
+                    aux = False
+                    for val in valor.ladoDerecho:
+                        if val == derecha:
+                            aux = True
+                            break
+                    if aux:
+                        valor.ladoDerecho.remove(val)
+                        if len(valor.ladoDerecho) == 0:
+                            for valor in self.producciones:
+                                if valor.inicial == inicial:
+                                    self.producciones.remove(valor)
+                                    break
+
+                        return"Se a eliminado la produccion"                    
+                    else:
+                        return"La produccion no existe en la gramatica"
+                else:
+                    return"La produccion no existe en la gramatica"
+
         if aux:
             aux = False
             #recorrido para validar la existencia del lado derecho de la produccion
@@ -258,6 +327,12 @@ class Gramatica2():
                     break
             if aux:
                 valor.ladoDerecho.remove(derecho)
+                if len(valor.ladoDerecho) == 0:
+                    for valor in self.producciones:
+                        if valor.inicial == inicial:
+                            self.producciones.remove(valor)
+                            break
+
                 return"Se a eliminado la produccion de la gramatica"
             else:
                 return"La produccion no existe en la gramatica"     

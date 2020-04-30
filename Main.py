@@ -36,40 +36,78 @@ automatasDePila = []
 repeticion = 0
 
 def validarCadenaTipo2(automata,entrada):
+    #simbolo que representa la letra griega lambda 
+    #le puse alpha porque lambda es una palabra reservada
     alpha = "\u03BB"
+
+    #creacion del arbol de derivacion (arbol sintactico)
     arbol = ArbolS(0,[])
+
+    #arreglo que retorna la validacion de la cadena, el csv y el arbol
     respuesta = []
+
+    #pila para validar la cadena
     pila = []
+
+    #arreglo para contar la cantidad de producciones en las que deriva un no terminal
     noTransiciones = []
+
+    #pila que almacena el id para generar los enlaces del arbol
     pilaNoTerminales = []
+
+    #valor que almacena el no terminal actual
     actual = automata.noTerminalInicial
+
+    #variable para recorrer la cadena de entrada
     it = 0
+    
+    #identificadores para los nodos del arbol
     idenTer = 0
     idenNoTer = 1
     idenAux = 0
+
+    #variable que tendra el valor del identificador nodo actual del arbol
     cambio = ""
+
+    #copiando la cadena de entrada para poder generar el csv
     entradaAux = entrada
+
+    #cabeceras del csv
     csv = "PILA$ENTRADA$TRANSICION\n"
 
+    #agregando el simbolo de aceptacion de cadena
     pila.append("#")
+
+    
     csv += alpha+"$"+entradaAux+"$(i, "+alpha+", "+alpha+"; p, #)\n"
+    
+    #agregando el valor del no terminal actual a la pila
     pila.append(actual)
+
     csv += "#$"+entradaAux+"$(p, "+alpha+", "+alpha+"; q, "+actual+")\n"
 
+    #buscando las transiciones asociadas al no terminal actual
     for transicion in automata.transiciones:
         if transicion.lecturaPila == actual:
             noTransiciones.append(transicion)
             
+    #si tiene una sola produccion ingresarla a la pila si no verificar cual es la que se necesita
     if len(noTransiciones) == 1:
+
+        #dando formato a la pila para el reporte csv
         val1 = str(pila).rstrip("]")
         val1 = val1.lstrip("[")
         val1 = val1.replace(", ","")
         val1 = val1.replace("'","")
+
+        #obteniendo la produccion
         val2 = noTransiciones[0].guardarEnPila.split(" ")
         
+        #destruyento y obteniendo el no terminal de la pila para ser ingresado al arbol
         value = pila.pop()
         arbol.agregar(value,"nt"+str(idenAux),"f")    
 
+        #agregando los valores del lado derecho de la produccion a la pila y al arbol
         for val in reversed(val2):
             pila.append(val)
             if val.islower() == True or val.isdigit() == True:
@@ -82,6 +120,7 @@ def validarCadenaTipo2(automata,entrada):
 
         idenAux+=1
 
+        #dando formato al lado derecho de la produccion para ingresarla al reporte csv
         val2 = str(val2).rstrip("]")
         val2 = val2.lstrip("[")
         val2 = val2.replace(", ","")
@@ -118,12 +157,21 @@ def validarCadenaTipo2(automata,entrada):
         val2 = val2.replace(", ","")
         val2 = val2.replace("'","")
         csv += val1+"$"+entradaAux+"$"+"(q, "+alpha+", "+actual+"; q,"+val2+")\n"
-        
+
+    #recorriendo la cadena de entrada    
     while it < len(entrada):
         noTransiciones = []
+
+        #obteniendo el valor al tope de la pila
         actual = pila[len(pila)-1]
+
+        #recorrer siempre que en la pila no quede unicamente el simbolo de aceptacion
         if pila[len(pila)-1] != "#":
+
+            #verificando si al tope de la pila esta un terminal o un no terminal
             if pila[len(pila)-1].islower()==True or pila[len(pila)-1].isdigit()==True:
+                #verificando que el terminal al tope de la pila sea el mismo que el 
+                #terminal que se esta leyendo en la entrada
                 if pila[len(pila)-1] == entrada[it]:
                     val1 = str(pila).rstrip("]")
                     val1 = val1.lstrip("[")
@@ -131,6 +179,8 @@ def validarCadenaTipo2(automata,entrada):
                     val1 = val1.replace("'","")
                     csv += val1+"$"+entradaAux+"$(q, "+actual+", "+actual+"; q,"+alpha+")\n"
                     entradaAux = entradaAux[1:len(entradaAux)]
+                    
+                    #extrayendo el terminal de la pila
                     pila.pop()
                     it += 1
                 else:  
@@ -140,6 +190,7 @@ def validarCadenaTipo2(automata,entrada):
                     respuesta.append(arbol)
                     return respuesta 
             else:
+                #obteniendo las producciones del no terminal actual
                 for transicion in automata.transiciones:
                     if transicion.lecturaPila == actual:
                         noTransiciones.append(transicion)
@@ -210,6 +261,8 @@ def validarCadenaTipo2(automata,entrada):
         else:
             break
 
+    #revisando que se haya leido toda la cadena y que la pila solo contenga el simbolo de aceptacion
+    #si quedo algun valor en la pila revisar que sean no terminales y que deriven en epsilon
     if len(pila) == 1 and it == len(entrada):
         csv += "#$"+entradaAux+"$(q, "+alpha+", #; f, "+alpha+")\n"
         csv += "$"+"$Aceptacion"
@@ -1922,13 +1975,6 @@ def menuGramaticaTipo2(gramatica2):
     print(" ")
     #lectura del teclado para direccionar a otro menu
     while True:
-        print(gramatica2.terminales)
-        print(gramatica2.noTerminales)
-        print(gramatica2.noTerminalInicial)
-        for val in gramatica2.producciones:
-            print(val.inicial)
-            print("   "+str(val.ladoDerecho))
-
         lectura = input('Presione el numero de la accion a realizar: ')
         if lectura.isdigit() == True:
             lectura = int(lectura)
@@ -2045,7 +2091,7 @@ def menuEvaluarCadenaTipo2(automata,response):
                     path_imagen = "C:\\Users\\chepe\\Desktop\\" + automata.nombre +".png"
                     comando = "dot " + path_dot + " -Tpng -o " + path_imagen
                     os.system(comando)
-                    print("Se a generado el archivo csv exitosamente")
+                    print("Se a generado el arbol de derivacion exitosamente")
                 #limpieza de pantalla
                 while True:
                     print("Presione enter para limpiar la pantalla")
@@ -2092,17 +2138,22 @@ def menuPrincipalTipo2():
         if lectura.isdigit() == True:
             lectura = int(lectura)
             if lectura == 1:
-                print("\nListado de gramaticas disponibles: \n")
+                print("\nListado de gramaticas disponibles:")
 
                 if len(gramaticas2)==0:
                     print("   Aun no existen gramaticas en el sistema\n")
                 else:
+                    gramaticas = ""
                     #mostrando las gramaticas disponibles
                     for valor in gramaticas2:
-                        print("   "+valor.nombre+"\n")
+                        if gramaticas == "":
+                            gramaticas = "   "+valor.nombre+"\n"
+                        else:
+                            gramaticas += "   "+valor.nombre+"\n"
+                    print(gramaticas)
 
                 #captura del nombre del automata
-                nombre = input("\nEscriba el nombre de una gramatica del listado, o un nombre distinto para crear una nueva gramatica: ")
+                nombre = input("Escriba el nombre de una gramatica del listado, o un nombre distinto para crear una nueva gramatica: ")
     
                 gramatica = None
 
@@ -2123,18 +2174,22 @@ def menuPrincipalTipo2():
                 else:
                     menuGramaticaTipo2(gramatica)
             elif lectura == 2:
-                print("\nListado de gramaticas disponibles: \n")
+                print("\nListado de gramaticas disponibles:")
 
                 if len(gramaticas2)==0:
                     print("   Aun no existen gramaticas en el sistema\n")
-
                 else:
                     #mostrando las gramaticas disponibles
+                    gramatica = ""
                     for valor in gramaticas2:
-                        print("   "+valor.nombre+"\n")
+                        if gramatica == "":
+                            gramatica = "   "+valor.nombre+"\n"
+                        else:
+                            gramatica += "   "+valor.nombre+"\n"
+                    print(gramatica)
 
                     #captura del nombre del automata
-                    nombre = input("\nEscriba el nombre de una gramatica del listado: ")
+                    nombre = input("Escriba el nombre de una gramatica del listado: ")
     
                     gramatica = None
 
@@ -2177,55 +2232,62 @@ def menuPrincipalTipo2():
                     if limpieza == b'\r':
                         menuPrincipalTipo2()
             elif lectura == 3:
-                #mostrando las gramaticas disponibles
-                for valor in automatasDePila:
-                    print("   "+valor.nombre+"\n")
+                print("\nListado de automatas disponibles:")
 
-                #captura del nombre del automata
-                nombre = input("\nEscriba el nombre de un automata del listado: ")
-    
-                automata = None
-
-                #verificacion del nombre del automata
-                for valor in automatasDePila:
-                    if valor.nombre == nombre:
-                        automata = valor
-                        break
-
-                if automata == None:
-                    print("El nombre ingresado no existe en el listado")
+                if len(automatasDePila)==0:
+                    print("   Aun no existen automatas en el sistema\n")
                 else:
-                    print("Sextupla del automata: ")
-                    print("   S: [i, p, q, f]")
-                    print("   \u03A3: "+str(automata.alfabeto))
-                    print("   \u0393: "+str(automata.simbolosPila))
-                    print("   L: i")
-                    print("   F: f")
-                    print("   T:",end=" ")
-                    trans = "{"
-                    for tran in automata.transiciones:
-                        trans += tran.actual+","+tran.entrada+","+tran.lecturaPila+";"+tran.nuevoEstado+","+tran.guardarEnPila+"\n       "
-                    trans = trans.rstrip("\n       ")
-                    trans += "}"
-                    print(trans)
+                    #mostrando las gramaticas disponibles
+                    gramatica = ""
+                    for valor in automatasDePila:
+                        if gramatica == "":
+                            gramatica = "   "+valor.nombre+"\n"
+                        else:
+                            gramatica += "   "+valor.nombre+"\n"
+                    print(gramatica)
 
-                    #obteniendo la ruta donde se ejecuta el programa
-                    ruta = os.getcwd()
+                    #captura del nombre del automata
+                    nombre = input("Escriba el nombre de un automata del listado: ")
+    
+                    automata = None
 
-                    #craendo el archivo que almacenara el .dot
-                    grafo = automata.generarGrafo()
-                    #path_dot = os.path.join(ruta,automata.nombre+".dot")
-                    path_dot = "C:\\Users\\chepe\\Desktop\\" + nombre +".dot"
-                    archivo_dot = codecs.open(path_dot,"w","utf-8")
-                    archivo_dot.write(grafo)
-                    archivo_dot.close()
+                    #verificacion del nombre del automata
+                    for valor in automatasDePila:
+                        if valor.nombre == nombre:
+                            automata = valor
+                            break
 
-                    #compilando la imagen generada del .dot
-                    #path_imagen = os.path.join(ruta,automata.nombre+".png") 
-                    path_imagen = "C:\\Users\\chepe\\Desktop\\" + nombre +".png"
-                    comando = "dot " + path_dot + " -Tpng -o " + path_imagen
-                    os.system(comando)
-                    os.system(path_imagen)
+                    if automata == None:
+                        print("El nombre ingresado no existe en el listado")
+                    else:
+                        print("Sextupla del automata: ")
+                        print("   S: [i, p, q, f]")
+                        print("   \u03A3: "+str(automata.alfabeto))
+                        print("   \u0393: "+str(automata.simbolosPila))
+                        print("   L: i")
+                        print("   F: f")
+                        print("   T:",end=" ")
+                        trans = "{"
+                        for tran in automata.transiciones:
+                            trans += tran.actual+","+tran.entrada+","+tran.lecturaPila+";"+tran.nuevoEstado+","+tran.guardarEnPila+"\n       "
+                        trans = trans.rstrip("\n       ")
+                        trans += "}"
+                        print(trans)
+
+                        #craendo el archivo que almacenara el .dot
+                        grafo = automata.generarGrafo()
+                        #path_dot = os.path.join(ruta,automata.nombre+".dot")
+                        path_dot = "C:\\Users\\chepe\\Desktop\\" + nombre +".dot"
+                        archivo_dot = codecs.open(path_dot,"w","utf-8")
+                        archivo_dot.write(grafo)
+                        archivo_dot.close()
+
+                        #compilando la imagen generada del .dot
+                        #path_imagen = os.path.join(ruta,automata.nombre+".png") 
+                        path_imagen = "C:\\Users\\chepe\\Desktop\\" + nombre +".png"
+                        comando = "dot " + path_dot + " -Tpng -o " + path_imagen
+                        os.system(comando)
+                        os.system(path_imagen)
                     
                     #limpieza de pantalla
                     while True:
@@ -2234,25 +2296,42 @@ def menuPrincipalTipo2():
                         if limpieza == b'\r':
                             menuPrincipalTipo2()
             elif lectura == 4:
-                #mostrando las gramaticas disponibles
-                for valor in automatasDePila:
-                    print("   "+valor.nombre+"\n")
+                print("\nListado de automatas disponibles:")
 
-                #captura del nombre del automata
-                nombre = input("\nEscriba el nombre de un automata del listado: ")
-    
-                automata = None
-
-                #verificacion del nombre del automata
-                for valor in automatasDePila:
-                    if valor.nombre == nombre:
-                        automata = valor
-                        break
-
-                if automata == None:
-                    print("El nombre ingresado no existe en el listado")
+                if len(automatasDePila)==0:
+                    print("   Aun no existen automatas en el sistema\n")
                 else:
-                    menuEvaluarCadenaTipo2(automata,[])
+                    #mostrando las gramaticas disponibles
+                    gramatica = ""
+                    for valor in automatasDePila:
+                        if gramatica == "":
+                            gramatica = "   "+valor.nombre+"\n"
+                        else:
+                            gramatica += "   "+valor.nombre+"\n"
+                    print(gramatica)
+
+                    #captura del nombre del automata
+                    nombre = input("Escriba el nombre de un automata del listado: ")
+    
+                    automata = None
+
+                    #verificacion del nombre del automata
+                    for valor in automatasDePila:
+                        if valor.nombre == nombre:
+                            automata = valor
+                            break
+
+                    if automata == None:
+                        print("El nombre ingresado no existe en el listado")
+                        
+                        #limpieza de pantalla
+                        while True:
+                            print("Presione enter para limpiar la pantalla")
+                            limpieza = getch()
+                            if limpieza == b'\r':
+                                menuPrincipalTipo2()
+                    else:
+                        menuEvaluarCadenaTipo2(automata,[])
             elif lectura == 5:
                 caratula()
             elif lectura == 0:
